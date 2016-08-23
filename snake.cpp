@@ -54,6 +54,20 @@ void displayScore(int score){
 	al_flip_display(); 
 }
 
+void displayHighScore(int score){
+	char text[17];
+	sprintf(text, "High Score: %d", score);
+
+	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",24,0);
+	int x = 2*SQUARE_WIDTH;
+	int y = GAME_SCREEN_HEIGHT - SQUARE_WIDTH;
+
+	al_draw_filled_rectangle(x, y, x+al_get_text_width(font, text), y+al_get_font_line_height(font), background_color);
+	al_draw_text(font, snake_color, x, y, 0, text);
+	al_flip_display(); 
+}
+
+
 void moveCoords(pair<int,int> &front, int dir){
     switch(dir) {
         case ALLEGRO_KEY_LEFT:
@@ -210,6 +224,11 @@ int main(int argc, char *argv[]){
 
     int score = 0;
     displayScore(score);
+
+    ifstream file("high_score.txt");
+    int high_score;
+    file >> high_score;
+	displayHighScore(high_score);
     
     al_rest(2);
 	countDown();
@@ -241,16 +260,9 @@ int main(int argc, char *argv[]){
 	}
 
 	//High scores
-	ifstream file("high_score.txt");
-	string high_score_str;
-	size_t high_score;
-	getline(file,high_score_str);
-	stoi(high_score_str, &high_score);
-
 	if(score > high_score) {
-		char msg[21];
-		sprintf(msg, "New High Score: %d", score);
-		displayText(msg,32,5);
+		displayHighScore(score);
+		displayText("New High Score!",48,5);
 		ofstream file;
 		file.open("high_score.txt");
 		file << score;
