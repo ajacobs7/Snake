@@ -30,7 +30,7 @@ const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 int SQUARE_WIDTH = 16;
 const int GRID_WIDTH = (SCREEN_WIDTH/SQUARE_WIDTH) - 2; //ignore boardering space
-const int GRID_HEIGHT = (SCREEN_HEIGHT/SQUARE_WIDTH) - 2;
+const int GRID_HEIGHT = (SCREEN_HEIGHT/SQUARE_WIDTH) - 2; 
 
 struct Snake{
     vector< vector<int> > grid; 
@@ -154,22 +154,23 @@ int oppositeDir(int dir){
 	return 0;
 }
 
-void displayText(ALLEGRO_FONT *font, const char *text, int time){
+void displayText(const char *text, int time){
+	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
 	int x = (SCREEN_WIDTH - al_get_text_width(font, text))/2;
 	int y = (SCREEN_HEIGHT - al_get_font_line_height(font))/2;
-	
+
 	al_draw_text(font, snake_color, x, y, 0, text);
 	al_flip_display(); 
 	al_rest(time);
-    al_draw_filled_rectangle(2*SQUARE_WIDTH, 2*SQUARE_WIDTH, SCREEN_WIDTH-2*SQUARE_WIDTH, SCREEN_HEIGHT-2*SQUARE_WIDTH, background_color);
+	al_draw_filled_rectangle(2*SQUARE_WIDTH, 2*SQUARE_WIDTH, SCREEN_WIDTH-2*SQUARE_WIDTH, SCREEN_HEIGHT-2*SQUARE_WIDTH, background_color);
 }
 
 void countDown(){
-	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
-	displayText(font, "READY?", 2);
-	displayText(font, "3", 1);
-	displayText(font, "2", 1);
-	displayText(font, "1", 1);
+	//ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
+	displayText("READY?", 2);
+	displayText("3", 1);
+	displayText("2", 1);
+	displayText("1", 1);
 }
 
 
@@ -214,9 +215,11 @@ int main(int argc, char *argv[]){
 
         gameover = moveSnake(snake, dir, food);
         if(gameover){
-            cout << "Game over!" << endl; 
+        	displayText("Game Over!", 5);
+            //cout << "Game over!" << endl; 
         } else if(snake->length == (GRID_WIDTH-2)*(GRID_HEIGHT-2)){
-            cout << "You win!" << endl;
+            displayText("You Win!", 5);
+            //cout << "You win!" << endl;
             gameover = true;
         }
 	}
