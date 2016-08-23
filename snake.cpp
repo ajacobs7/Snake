@@ -247,10 +247,13 @@ int main(int argc, char *argv[]){
 		ALLEGRO_EVENT ev;
 		if(al_get_next_event(event_queue, &ev)){
 			if(ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) exit(0); // escape = quit
-			if(ev.keyboard.keycode == ALLEGRO_KEY_SPACE){
-				al_rest(5); //should pause until space pressed again
-			}
-			if(oppositeDir(dir) != ev.keyboard.keycode) {
+			if(ev.keyboard.keycode == ALLEGRO_KEY_SPACE){ // space = pause
+				bool paused = true;
+				while(paused) {
+					al_wait_for_event(event_queue, &ev);
+					if(ev.keyboard.keycode == ALLEGRO_KEY_SPACE) paused = false;
+				}
+			} else if(oppositeDir(dir) != ev.keyboard.keycode) {
 				dir = ev.keyboard.keycode;
 				al_flush_event_queue(event_queue);
 			}
