@@ -7,18 +7,18 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <cstdlib>
 #include <queue>
+#include <string>
 
 using namespace std;
 
 #define FREE 0
-#define SNAKE 1
-#define WALL 2
 
 #define snake_color al_map_rgb(4,112,24)
 #define food_color al_map_rgb(173,7,115) 
@@ -96,7 +96,7 @@ bool moveSnake(Snake *snake, int dir, pair<int,int> &food, int &score){
     
     if(snake->grid[snake->front.second][snake->front.first] == FREE) {
         addRect(snake->front, snake_color); //Add to head
-        snake->grid[snake->front.second][snake->front.first] = SNAKE;
+        snake->grid[snake->front.second][snake->front.first] = !FREE;
         
         if(food == snake->front){
         	score += 25;
@@ -121,12 +121,12 @@ bool moveSnake(Snake *snake, int dir, pair<int,int> &food, int &score){
 vector< vector<int> > initGrid(){
     vector< vector<int> > grid(GRID_HEIGHT, vector<int>(GRID_WIDTH, 0)); 
     
-    grid[0] = vector<int>(GRID_WIDTH, WALL);
-    grid[GRID_HEIGHT-1] = vector<int>(GRID_WIDTH, WALL);
+    grid[0] = vector<int>(GRID_WIDTH, !FREE);
+    grid[GRID_HEIGHT-1] = vector<int>(GRID_WIDTH, !FREE);
 
     for(int i=0; i < GRID_HEIGHT; i++){	
-        grid[i][0] = WALL;
-        grid[i][GRID_WIDTH-1] = WALL;
+        grid[i][0] = !FREE;
+        grid[i][GRID_WIDTH-1] = !FREE;
     }
     return grid;
 }
@@ -139,7 +139,7 @@ Snake *createSnake(){
     for(int i=2; i >= 0; i--){
         int x = (GRID_WIDTH/2) + i;
         int y = (GRID_HEIGHT/2);
-        grid[y][x] = SNAKE;
+        grid[y][x] = !FREE;
         addRect(make_pair(x,y), snake_color);
     }
     queue<int> dirs;
@@ -170,8 +170,8 @@ int oppositeDir(int dir){
 	return 0;
 }
 
-void displayText(const char *text, int time){
-	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
+void displayText(const char *text, int size, int time){
+	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",size,0);
 	int x = (SCREEN_WIDTH - al_get_text_width(font, text))/2;
 	int y = (GAME_SCREEN_HEIGHT - al_get_font_line_height(font))/2;
 
@@ -182,11 +182,10 @@ void displayText(const char *text, int time){
 }
 
 void countDown(){
-	//ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
-	displayText("READY?", 2);
-	displayText("3", 1);
-	displayText("2", 1);
-	displayText("1", 1);
+	displayText("READY?", 72, 2);
+	displayText("3", 72, 1);
+	displayText("2", 72, 1);
+	displayText("1", 72, 1);
 }
 
 
@@ -234,12 +233,29 @@ int main(int argc, char *argv[]){
 
         gameover = moveSnake(snake, dir, food, score);
         if(gameover){
-        	displayText("Game Over!", 5);
+        	displayText("Game Over!", 72, 5);
         } else if(snake->length == (GRID_WIDTH-2)*(GRID_HEIGHT-2)){
-            displayText("You Win!", 5);
+            displayText("You Win!", 72, 5);
             gameover = true;
         }
 	}
+
+	//High scores
+	ifstream file("high_score.txt");
+	string high_score_str;
+	size_t high_score;
+	getline(file,high_score_str);
+	stoi(high_score_str, &high_score);
+
+	if(score > high_score) {
+		char msg[21];
+		sprintf(msg, "New High Score: %d", score);
+		displayText(msg,32,5);
+		ofstream file;
+		file.open("high_score.txt");
+		file << score;
+	}
+
 
 	al_destroy_display(display);
 	al_shutdown_primitives_addon();
