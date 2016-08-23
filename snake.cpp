@@ -1,5 +1,5 @@
 //
-//  main.cpp
+//  snake.cpp
 //  Snake
 //
 //  Created by Austin Jacobs on 8/19/16.
@@ -9,6 +9,8 @@
 #include <iostream>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 #include <cstdlib>
 #include <queue>
 
@@ -58,7 +60,7 @@ void moveCoords(pair<int,int> &front, int dir){
 void addRect(pair<int,int> coord, ALLEGRO_COLOR col){
     float x = coord.first * SQUARE_WIDTH + SQUARE_WIDTH;
     float y = coord.second * SQUARE_WIDTH + SQUARE_WIDTH;
-    al_draw_filled_rounded_rectangle(x, y, x+SQUARE_WIDTH, y+SQUARE_WIDTH, 2, 2, col);
+    al_draw_filled_rounded_rectangle(x, y, x+SQUARE_WIDTH-1, y+SQUARE_WIDTH-1, 2, 2, col);
 }
 
 pair<int, int> addFood(Snake *snake){	
@@ -152,6 +154,25 @@ int oppositeDir(int dir){
 	return 0;
 }
 
+void displayText(ALLEGRO_FONT *font, const char *text, int time){
+	int x = (SCREEN_WIDTH - al_get_text_width(font, text))/2;
+	int y = (SCREEN_HEIGHT - al_get_font_line_height(font))/2;
+	
+	al_draw_text(font, snake_color, x, y, 0, text);
+	al_flip_display(); 
+	al_rest(time);
+    al_draw_filled_rectangle(2*SQUARE_WIDTH, 2*SQUARE_WIDTH, SCREEN_WIDTH-2*SQUARE_WIDTH, SCREEN_HEIGHT-2*SQUARE_WIDTH, background_color);
+}
+
+void countDown(){
+	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
+	displayText(font, "READY?", 2);
+	displayText(font, "3", 1);
+	displayText(font, "2", 1);
+	displayText(font, "1", 1);
+}
+
+
 int main(int argc, char *argv[]){
 	
     al_init();
@@ -163,11 +184,18 @@ int main(int argc, char *argv[]){
     al_init_primitives_addon();
     al_set_new_display_option(ALLEGRO_SINGLE_BUFFER, 1, ALLEGRO_REQUIRE);
 
+    al_init_font_addon();
+    al_init_ttf_addon();
+
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
 	al_set_target_bitmap(al_get_backbuffer(display));
     al_clear_to_color(background_color);
     al_draw_rectangle(1.9*SQUARE_WIDTH, 1.9*SQUARE_WIDTH, SCREEN_WIDTH-1.8*SQUARE_WIDTH, SCREEN_HEIGHT-1.8*SQUARE_WIDTH, wall_color, 2.0);
-	
+    
+    al_rest(2);
+	countDown();
+
+
     bool gameover = false; 
     int dir = ALLEGRO_KEY_LEFT; 
     
@@ -175,7 +203,6 @@ int main(int argc, char *argv[]){
     pair<int,int> food = addFood(snake);
 
     al_flip_display(); 
-    al_rest(3);
 	
     while(!gameover){ //escape key is quit as well
 
@@ -196,6 +223,8 @@ int main(int argc, char *argv[]){
 
 	al_destroy_display(display);
 	al_shutdown_primitives_addon();
+	al_shutdown_font_addon();
+	//al_shutdown_ttf_addon(); //seg fault
 	return 0;
 }
 
