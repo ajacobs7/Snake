@@ -27,10 +27,11 @@ using namespace std;
 
 
 const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int GAME_SCREEN_HEIGHT = 480;
+const int SCORE_OFFSET = 30;
 int SQUARE_WIDTH = 16;
 const int GRID_WIDTH = (SCREEN_WIDTH/SQUARE_WIDTH) - 2; //ignore boardering space
-const int GRID_HEIGHT = (SCREEN_HEIGHT/SQUARE_WIDTH) - 2; 
+const int GRID_HEIGHT = (GAME_SCREEN_HEIGHT/SQUARE_WIDTH) - 2; 
 
 struct Snake{
     vector< vector<int> > grid; 
@@ -39,6 +40,19 @@ struct Snake{
     queue<int> dirs; //tail at front, head at back
     int length;
 };
+
+void displayScore(int score){
+	char text[12];
+	sprintf(text, "Score: %d", score);
+
+	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",24,0);
+	int x = SCREEN_WIDTH - al_get_text_width(font, text) - 2*SQUARE_WIDTH;
+	int y = GAME_SCREEN_HEIGHT - SQUARE_WIDTH; //- al_get_font_line_height(font))/2;
+
+	al_draw_filled_rectangle(x, y, x+al_get_text_width(font, text), y+al_get_font_line_height(font), background_color);
+	al_draw_text(font, snake_color, x, y, 0, text);
+	al_flip_display(); 
+}
 
 void moveCoords(pair<int,int> &front, int dir){
     switch(dir) {
@@ -75,7 +89,7 @@ pair<int, int> addFood(Snake *snake){
     return food;
 }
 
-bool moveSnake(Snake *snake, int dir, pair<int,int> &food){
+bool moveSnake(Snake *snake, int dir, pair<int,int> &food, int &score){
     
     moveCoords(snake->front, dir);
     snake->dirs.push(dir);
@@ -85,6 +99,8 @@ bool moveSnake(Snake *snake, int dir, pair<int,int> &food){
         snake->grid[snake->front.second][snake->front.first] = SNAKE;
         
         if(food == snake->front){
+        	score += 25;
+        	displayScore(score);
             snake->length++;
             food = addFood(snake); //seg faults here
         } else {
@@ -157,12 +173,12 @@ int oppositeDir(int dir){
 void displayText(const char *text, int time){
 	ALLEGRO_FONT *font = al_load_ttf_font("Arial Bold.ttf",72,0);
 	int x = (SCREEN_WIDTH - al_get_text_width(font, text))/2;
-	int y = (SCREEN_HEIGHT - al_get_font_line_height(font))/2;
+	int y = (GAME_SCREEN_HEIGHT - al_get_font_line_height(font))/2;
 
 	al_draw_text(font, snake_color, x, y, 0, text);
 	al_flip_display(); 
 	al_rest(time);
-	al_draw_filled_rectangle(2*SQUARE_WIDTH, 2*SQUARE_WIDTH, SCREEN_WIDTH-2*SQUARE_WIDTH, SCREEN_HEIGHT-2*SQUARE_WIDTH, background_color);
+	al_draw_filled_rectangle(2*SQUARE_WIDTH, 2*SQUARE_WIDTH, SCREEN_WIDTH-2*SQUARE_WIDTH, GAME_SCREEN_HEIGHT-2*SQUARE_WIDTH, background_color);
 }
 
 void countDown(){
@@ -188,10 +204,13 @@ int main(int argc, char *argv[]){
     al_init_font_addon();
     al_init_ttf_addon();
 
-    ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+    ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, GAME_SCREEN_HEIGHT+SCORE_OFFSET);
 	al_set_target_bitmap(al_get_backbuffer(display));
     al_clear_to_color(background_color);
-    al_draw_rectangle(1.9*SQUARE_WIDTH, 1.9*SQUARE_WIDTH, SCREEN_WIDTH-1.8*SQUARE_WIDTH, SCREEN_HEIGHT-1.8*SQUARE_WIDTH, wall_color, 2.0);
+    al_draw_rectangle(1.9*SQUARE_WIDTH, 1.9*SQUARE_WIDTH, SCREEN_WIDTH-1.8*SQUARE_WIDTH, GAME_SCREEN_HEIGHT-1.8*SQUARE_WIDTH, wall_color, 2.0);
+
+    int score = 0;
+    displayScore(score);
     
     al_rest(2);
 	countDown();
@@ -213,13 +232,11 @@ int main(int argc, char *argv[]){
 			al_flush_event_queue(event_queue);
 		}
 
-        gameover = moveSnake(snake, dir, food);
+        gameover = moveSnake(snake, dir, food, score);
         if(gameover){
         	displayText("Game Over!", 5);
-            //cout << "Game over!" << endl; 
         } else if(snake->length == (GRID_WIDTH-2)*(GRID_HEIGHT-2)){
             displayText("You Win!", 5);
-            //cout << "You win!" << endl;
             gameover = true;
         }
 	}
